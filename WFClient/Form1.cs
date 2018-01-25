@@ -79,7 +79,7 @@ namespace WFClient
             {
                 _Exclist.Clear();
                 btnSend.Enabled = false;
-                btnSendTest.Enabled = false;
+                btnAddToTestList.Enabled = false;
 
                 _stopwatch.Stop();
                 _stopwatch.Reset();
@@ -100,16 +100,13 @@ namespace WFClient
 
         private void btnSendTest_Click(object sender, EventArgs e)
         {
-            btnSend.Enabled = false;
-            btnSendTest.Enabled = false;
-
             txtOutput.Text = JToken.Parse(SendRequestTest().Content).ToString(Formatting.Indented);
         }
         private void bwRequests_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
             var backgroundWorker = sender as BackgroundWorker;
 
-            ExecuteRequest(backgroundWorker, int.Parse(txtConcurrentRequests.Text), (int.Parse(txtTotalRequests.Text)),cbIsMultiThreaded.Checked);
+            ExecuteRequest(backgroundWorker, int.Parse(txtConcurrentRequests.Text), (int.Parse(txtTotalRequests.Text)), cbIsMultiThreaded.Checked);
         }
 
         private void SingleThreaded(BackgroundWorker backgroundWorker)
@@ -145,12 +142,12 @@ namespace WFClient
             if (isMultiThreaded)
             {
                 var maxDegreeOfParallelism = maxThreads == 0 ? 1 : maxThreads;
-                var options = new ParallelOptions() {MaxDegreeOfParallelism = maxDegreeOfParallelism};
+                var options = new ParallelOptions() { MaxDegreeOfParallelism = maxDegreeOfParallelism };
 
-                Parallel.For(0, maxRequests,options, i =>
-                {
-                    DoWork(backgroundWorker, maxThreads, maxRequests, runner, requestCode, i);
-                });
+                Parallel.For(0, maxRequests, options, i =>
+                 {
+                     DoWork(backgroundWorker, maxThreads, maxRequests, runner, requestCode, i);
+                 });
                 //TaskMultiThreading(backgroundWorker, maxThreads, maxRequests, runner, requestCode);
             }
             else
@@ -160,7 +157,7 @@ namespace WFClient
                     DoWork(backgroundWorker, maxThreads, maxRequests, runner, requestCode, i);
                 }
             }
-            
+
         }
 
         private void TaskMultiThreading(BackgroundWorker backgroundWorker, int maxThreads, int maxRequests, Runner runner,
@@ -197,7 +194,7 @@ namespace WFClient
 
             _concurrentQueue.Enqueue(new TestRunnerQ
             {
-                TaskName = $"Request {i}", //TODO: Get Custom Name from UI.
+                TaskName = $"Activity {i}", //TODO: Get Custom Name from UI.
                 MaxThreads = maxThreads,
                 MaxRequests = maxRequests,
                 ExecuteId = i,
@@ -219,7 +216,7 @@ namespace WFClient
             var progressValue = _Exclist.Sum(i => i);
             var percentage = (double)(progressValue * 100) / (double)_upperBound;
             pbProgress.Value = (int)percentage;
-            lblPercentage.Text = percentage + @"% Completed";
+            lblPercentage.Text = (int)percentage + @"% Completed";
             lblTotalCompletedCount.Text = (progressValue).ToString() + @"/" + _upperBound.ToString();
 
             _sum = _stopwatch.ElapsedMilliseconds;
@@ -233,7 +230,8 @@ namespace WFClient
 
             if ((int)percentage != 100) return;
 
-            btnSend.Enabled = false;
+            btnSend.Enabled = true;
+            btnAddToTestList.Enabled = true;
         }
 
         private void UpdateDataGridView(DataTable dataTable)
@@ -260,18 +258,30 @@ namespace WFClient
 
         private void btnAddToTestList_Click(object sender, EventArgs e)
         {
-            
+            PopulateCifigurationGrid();
+        }
 
-            _items.Add(
-                new TaskConfiguration()
-                {
-                    ItemId = _items.Count + 1,
-                    Name = "TaskName",
-                    MaxConcurrentThreads = 1,
-                    TotalRequests = 1,
-                    IsMultiThreadExecution = false,
-                    RequestCode = RequestCode.Text
-                });
+        private void PopulateCifigurationGrid()
+        {
+            Form2 frm = new Form2();
+            if (frm.ShowDialog(this) == DialogResult.OK)
+            {
+                _items.Add(
+                    new TaskConfiguration()
+                    {
+                        ItemId = _items.Count + 1,
+                        Name = frm.ItemName,
+                        MaxConcurrentThreads = frm.ConcurrentRequests,
+                        TotalRequests = frm.TotalRequests,
+                        IsMultiThreadExecution = frm.IsMultiThreaded,
+                        RequestCode = frm.RequestCode
+                    });
+            }
+            frm.Dispose();
+
+            var dataTable = CreateDataTable(_items);
+            gvConfigurationSettings.DataSource = dataTable;
+            gvConfigurationSettings.DataMember = dataTable.TableName;
         }
     }
 }
