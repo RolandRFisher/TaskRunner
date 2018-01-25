@@ -99,6 +99,7 @@
             this.btnAddToTestList.TabIndex = 6;
             this.btnAddToTestList.Text = ">> Add >>";
             this.btnAddToTestList.UseVisualStyleBackColor = true;
+            this.btnAddToTestList.Click += new System.EventHandler(this.btnAddToTestList_Click);
             // 
             // bwRequests
             // 

@@ -120,9 +120,9 @@
   <data name="RequestCode.Text" xml:space="preserve">
     <value>var client = new RestClient("http://localhost:7979/v1/games");
 var request = new RestRequest(Method.POST);
-request.AddHeader("postman-token", "521aadf5-96b1-80e9-ed4a-79ea86112760");
+request.AddHeader("postman-token", "be89d764-e0c6-7f1d-ba99-bef6956c6f85");
 request.AddHeader("cache-control", "no-cache");
-request.AddHeader("token", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJFZGdlTG9jYXRpb24iOiJNSVQiLCJCcmFuZCI6IiIsIlByb3ZpZGVyIjoiIiwiUHJvZHVjdCI6IlZlZ2FzIiwiUGxhdGZvcm0iOiIiLCJMb2dpbiI6IkpvaG5Eb2UiLCJQYXNzd29yZCI6IlBhc3N3b3JkMTIzIiwibmJmIjoxNTE2ODAwNTA1LCJleHAiOjE1MTY4ODY5MDUsImlhdCI6MTUxNjgwMDUwNSwiaXNzIjoiRGlnaU91dHNvdXJjZSIsImF1ZCI6InJlY2VpdmVyVGVzdCJ9.oa_LudpYdZAMJ0VZv32nXgma-nzBG5gFJhMGYmnaFQY");
+request.AddHeader("token", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJFZGdlTG9jYXRpb24iOiJNSVQiLCJCcmFuZCI6IiIsIlByb3ZpZGVyIjoiIiwiUHJvZHVjdCI6IlZlZ2FzIiwiUGxhdGZvcm0iOiIiLCJMb2dpbiI6IkpvaG5Eb2UiLCJQYXNzd29yZCI6IlBhc3N3b3JkMTIzIiwibmJmIjoxNTE2ODg3NDM1LCJleHAiOjE1MTY5NzM4MzUsImlhdCI6MTUxNjg4NzQzNSwiaXNzIjoiRGlnaU91dHNvdXJjZSIsImF1ZCI6InJlY2VpdmVyVGVzdCJ9.BJFdQcjBQ8MJeJtcqRMlSVJvubJxr9HLVqBNYu5WL-g");
 request.AddHeader("content-type", "application/json");
 request.AddParameter("application/json", "{\r\n\t\"country\":\"\",\r\n\t\"clientCode\":\"\",\r\n\t\"language\":\"\",\r\n\t\"clientType\":1,\r\n\t\"gamingServerId\":312,\r\n\t\"casinoId\":329,\r\n\t\"playerId\":2772489\r\n}\t", ParameterType.RequestBody);
 IRestResponse response = client.Execute(request);</value>

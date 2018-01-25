@@ -25,6 +25,7 @@ namespace WFClient
         private Stopwatch _stopwatch;
         private TimeSpan _ts;
         private long _sum;
+        private List<TaskConfiguration> _items;
 
 
         public Form1()
@@ -38,6 +39,7 @@ namespace WFClient
         {
             _Exclist = new List<int>();
             _stopwatch = new Stopwatch();
+            _items = new List<TaskConfiguration>();
 
         }
 
@@ -107,7 +109,7 @@ namespace WFClient
         {
             var backgroundWorker = sender as BackgroundWorker;
 
-            ExecuteRequest(backgroundWorker, 10, (int.Parse(txtTotalRequests.Text)),cbIsMultiThreaded.Checked);
+            ExecuteRequest(backgroundWorker, int.Parse(txtConcurrentRequests.Text), (int.Parse(txtTotalRequests.Text)),cbIsMultiThreaded.Checked);
         }
 
         private void SingleThreaded(BackgroundWorker backgroundWorker)
@@ -142,65 +144,69 @@ namespace WFClient
 
             if (isMultiThreaded)
             {
-                Parallel.For(0, maxRequests, i =>
+                var maxDegreeOfParallelism = maxThreads == 0 ? 1 : maxThreads;
+                var options = new ParallelOptions() {MaxDegreeOfParallelism = maxDegreeOfParallelism};
+
+                Parallel.For(0, maxRequests,options, i =>
                 {
-                    var startDate = DateTime.Now;
-                    var sw = new Stopwatch();
-                    sw.Start();
-
-
-                    var restResponse = runner.SendRequest(requestCode);
-
-
-                    sw.Stop();
-                    var endDate = DateTime.Now;
-
-
-                    _concurrentQueue.Enqueue(new TestRunnerQ
-                    {
-                        TaskName = $"Request {i}",//TODO: Get Custom Name from UI.
-                        MaxThreads = maxThreads,
-                        MaxRequests = maxRequests,
-                        ExecuteId = i,
-                        IsSuccessful = restResponse.IsSuccessful,
-                        StartTime = startDate,
-                        EndTime = endDate,
-                        ElapsedMilliseconds = sw.ElapsedMilliseconds
-                    });
-                    backgroundWorker?.ReportProgress(1);
+                    DoWork(backgroundWorker, maxThreads, maxRequests, runner, requestCode, i);
                 });
+                //TaskMultiThreading(backgroundWorker, maxThreads, maxRequests, runner, requestCode);
             }
             else
             {
                 for (int i = 1; i <= maxRequests; i++)
                 {
-                    var startDate = DateTime.Now;
-                    var sw = new Stopwatch();
-                    sw.Start();
-
-
-                    var restResponse = runner.SendRequest(requestCode);
-
-
-                    sw.Stop();
-                    var endDate = DateTime.Now;
-
-
-                    _concurrentQueue.Enqueue(new TestRunnerQ
-                    {
-                        TaskName = $"Task {i}",//TODO: Get Custom Name from UI.
-                        MaxThreads = maxThreads,
-                        MaxRequests = maxRequests,
-                        ExecuteId = i,
-                        IsSuccessful = restResponse.IsSuccessful,
-                        StartTime = startDate,
-                        EndTime = endDate,
-                        ElapsedMilliseconds = sw.ElapsedMilliseconds
-                    });
-                    backgroundWorker?.ReportProgress(1);
+                    DoWork(backgroundWorker, maxThreads, maxRequests, runner, requestCode, i);
                 }
             }
             
+        }
+
+        private void TaskMultiThreading(BackgroundWorker backgroundWorker, int maxThreads, int maxRequests, Runner runner,
+            string requestCode)
+        {
+            var tasks = new List<Task>(maxRequests);
+            for (int i = 0; i < maxRequests; i++)
+            {
+                tasks.Add(Task.Factory.StartNew(() => DoWork(backgroundWorker, maxThreads, maxRequests, runner, requestCode, i)));
+            }
+            Task.WaitAll(tasks.ToArray());
+        }
+
+        private void ParallelMultiThreading(BackgroundWorker backgroundWorker, int maxThreads, int maxRequests, Runner runner,
+            string requestCode)
+        {
+            Parallel.For(0, maxRequests, i => { DoWork(backgroundWorker, maxThreads, maxRequests, runner, requestCode, i); });
+        }
+
+        private void DoWork(BackgroundWorker backgroundWorker, int maxThreads, int maxRequests, Runner runner,
+            string requestCode, int i)
+        {
+            var startDate = DateTime.Now;
+            var sw = new Stopwatch();
+            sw.Start();
+
+
+            var restResponse = runner.SendRequest(requestCode);
+
+
+            sw.Stop();
+            var endDate = DateTime.Now;
+
+
+            _concurrentQueue.Enqueue(new TestRunnerQ
+            {
+                TaskName = $"Request {i}", //TODO: Get Custom Name from UI.
+                MaxThreads = maxThreads,
+                MaxRequests = maxRequests,
+                ExecuteId = i,
+                IsSuccessful = restResponse.IsSuccessful,
+                StartTime = startDate,
+                EndTime = endDate,
+                ElapsedMilliseconds = sw.ElapsedMilliseconds
+            });
+            backgroundWorker?.ReportProgress(1);
         }
 
         private void bwRequests_ProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e)
@@ -213,8 +219,8 @@ namespace WFClient
             var progressValue = _Exclist.Sum(i => i);
             var percentage = (double)(progressValue * 100) / (double)_upperBound;
             pbProgress.Value = (int)percentage;
-            lblPercentage.Text = (int)percentage + @"% Completed";
-            lblTotalCompletedCount.Text = ((int)progressValue).ToString() + @"/" + _upperBound.ToString();
+            lblPercentage.Text = percentage + @"% Completed";
+            lblTotalCompletedCount.Text = (progressValue).ToString() + @"/" + _upperBound.ToString();
 
             _sum = _stopwatch.ElapsedMilliseconds;
             TimeSpan t = TimeSpan.FromMilliseconds(_sum);
@@ -250,6 +256,22 @@ namespace WFClient
         private void lblMaxConcurrentThreads_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void btnAddToTestList_Click(object sender, EventArgs e)
+        {
+            
+
+            _items.Add(
+                new TaskConfiguration()
+                {
+                    ItemId = _items.Count + 1,
+                    Name = "TaskName",
+                    MaxConcurrentThreads = 1,
+                    TotalRequests = 1,
+                    IsMultiThreadExecution = false,
+                    RequestCode = RequestCode.Text
+                });
         }
     }
 }
