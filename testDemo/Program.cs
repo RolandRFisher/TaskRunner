@@ -10,6 +10,11 @@ namespace testDemo
     {
         static void Main(string[] args)
         {
+            var parallelQuery = ParallelEnumerable.Range(0, 100);
+            foreach (var item in parallelQuery.ToList())
+            {
+                Console.WriteLine(item);
+            }
         }
     }
 }
